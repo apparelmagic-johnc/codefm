@@ -7,7 +7,8 @@ name: gitleaks
 #
 # Scans FULL history, not just the diff: a secret introduced in an earlier
 # commit on the branch is still a secret once merged. Known fixtures are
-# allowlisted in .gitleaks.toml rather than by weakening the scan.
+# allowlisted in .gitleaks.toml by exact value rather than by weakening
+# the scan.
 on:
   pull_request:
   push:
@@ -26,27 +27,34 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      # fetch-depth: 0 because `gitleaks detect` walks history; the default
-      # shallow clone would silently scan only the tip commit.
+      # SHA-pinned: a retargeted tag could run different action code before the
+      # secret scan. fetch-depth: 0 because the scan walks history and the
+      # default shallow clone would silently scan only the tip commit.
       # persist-credentials: false so no usable git token is left on disk.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
           persist-credentials: false
 
       # Pinned binary rather than gitleaks-action: no marketplace action to
-      # trust, no licence key (the action requires one for organisations), and
-      # the version is explicit rather than floating on a tag.
+      # trust and no licence key (the action requires one for organisations).
+      # The digest is verified BEFORE extraction -- piping curl straight into
+      # tar would execute unverified bytes, which is not acceptable in the
+      # workflow whose whole job is supply-chain hygiene.
       - name: Install gitleaks
         env:
           GITLEAKS_VERSION: 8.30.1
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
         run: |
           set -euo pipefail
-          curl -sSfL \
-            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
-            | tar -xz gitleaks
+          curl -sSfL -o gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
           ./gitleaks version
 
-      # --redact so a real finding never echoes the secret into public CI logs.
+      # `git` is the current subcommand; `detect` is retained for compatibility
+      # but hidden from help in 8.x. --redact so a real finding never echoes the
+      # secret into CI logs.
       - name: Scan for secrets
-        run: ./gitleaks detect --no-banner --redact --exit-code 1
+        run: ./gitleaks git --no-banner --redact --exit-code 1

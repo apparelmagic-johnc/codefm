@@ -53,6 +53,25 @@ jobs:
           tar -xzf gitleaks.tar.gz gitleaks
           ./gitleaks version
 
+      # A secret gate that silently stops detecting is worse than no gate: the
+      # scan would pass every PR and nobody would notice. Prove the binary
+      # actually fires on this runner before trusting its verdict. The canary is
+      # generated at runtime into a temp dir outside the repo, so it is never
+      # committed and never picked up by the repo's .gitleaks.toml allowlist.
+      - name: Smoke-test the scanner (canary must be detected)
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          printf 'ghp_%s\n' \
+            "$(head -c 40 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 36)" \
+            > "$tmp/canary.txt"
+          if ./gitleaks dir "$tmp" --no-banner --redact --exit-code 1 >/dev/null 2>&1; then
+            echo "::error::gitleaks did not detect the canary secret - the gate is INERT"
+            rm -rf "$tmp"; exit 1
+          fi
+          rm -rf "$tmp"
+          echo "canary detected: scanner is live"
+
       # `git` is the current subcommand; `detect` is retained for compatibility
       # but hidden from help in 8.x. --redact so a real finding never echoes the
       # secret into CI logs.

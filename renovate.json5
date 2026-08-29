@@ -1,0 +1,61 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+
+  // This repo was missed when the other four got a Renovate config.
+  //
+  // Scope is deliberately narrow: Package.swift declares NO external SPM
+  // dependencies (the only `dependencies:` entry is the test target depending
+  // on the executable target in the same package), so there is nothing for the
+  // swift manager to update. The real job is the GitHub Actions in
+  // .github/workflows -- which matters precisely because those are SHA-pinned,
+  // and a pinned digest is exactly the thing that goes stale silently.
+  extends: [
+    "config:recommended",
+    ":semanticCommitTypeAll(chore)",
+    "helpers:pinGitHubActionDigests", // matches the SHA-pinning in ci.yml and gitleaks.yml
+  ],
+
+  // Not an allow-list by accident: config:recommended does not limit manager
+  // discovery, so without this the swift manager would silently start managing
+  // SPM deps the moment one is added -- outside this file's stated scope and
+  // outside the pinning discipline. Revisit deliberately if CodeFM takes a
+  // dependency.
+  enabledManagers: ["github-actions"],
+
+  // Supply-chain defence, mirroring the local ~/.npmrc policy: never open a PR
+  // for a release younger than a week, so a compromised publish has time to be
+  // caught. internalChecksFilter: "strict" is REQUIRED -- without it Renovate
+  // still creates the branch and merely delays the PR.
+  minimumReleaseAge: "7 days",
+  internalChecksFilter: "strict",
+
+  schedule: ["* 0-6 * * 1"],
+  prConcurrentLimit: 3,
+  labels: ["dependencies"],
+
+  // Security fixes skip the soak.
+  vulnerabilityAlerts: {
+    minimumReleaseAge: null,
+    schedule: null,
+    labels: ["dependencies", "security"],
+  },
+  osvVulnerabilityAlerts: true,
+
+  // No Dependency Dashboard: Issues are disabled on this repo (verified via
+  // the API: has_issues=false), so a dashboard issue could not be created.
+  dependencyDashboard: false,
+
+  packageRules: [
+    { matchManagers: ["github-actions"], groupName: "github actions" },
+    // NOTE: Issues are disabled here, so there is no Dependency Dashboard to
+    // approve majors from. Majors therefore get their own standalone PR --
+    // close the PR to decline. Do NOT add dependencyDashboardApproval; it would
+    // hold every major forever with no way to approve.
+    {
+      matchUpdateTypes: ["major"],
+      groupName: null,
+      labels: ["dependencies", "major"],
+      minimumReleaseAge: "14 days",
+    },
+  ],
+}

@@ -1,10 +1,10 @@
-# SwiftLint — CodeRabbit runs this automatically on each PR's changed Swift files.
+# SwiftLint config. No automated runner since 2026-08-30 (CodeRabbit removed);
+# runnable locally via `swiftlint` and pending a CI lint job (follow-up ticket).
 #
 # Deliberately conservative starter: opt in to a small set of high-signal
 # correctness/safety rules only (no style, formatting, or line-length rules), so
-# it surfaces real issues instead of a nit-storm. Because CodeRabbit lints the
-# PR diff (not the whole repo), any existing violations appear incrementally as
-# files are touched — fix as you go, then broaden this list over time.
+# it surfaces real issues instead of a nit-storm. Existing violations are fixed
+# incrementally as files are touched — fix as you go, then broaden this list over time.
 
 only_rules:
   # Dangerous constructs

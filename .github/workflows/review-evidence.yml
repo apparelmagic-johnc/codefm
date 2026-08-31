@@ -55,7 +55,7 @@ jobs:
             | perl -0pe 's/<!--.*?-->//gs; s/^[ \t]*(`{3,}|~{3,}).*?^[ \t]*\1[^\n]*\n?//gms; s/^[ \t]*(`{3,}|~{3,}).*\z//ms')"
 
           prefix='^[[:space:]]*(>[[:space:]]*)?(#{1,6}[[:space:]]+)?([-*+][[:space:]]+)?(\*\*)?'
-          if grep -Eiq "${prefix}reviewed by[[:space:]]+[^,[:space:]][^,]*,[[:space:]]*[1-9][0-9]*[[:space:]]+rounds?([^[:alnum:]]|$)" <<<"$body"; then
+          if grep -Eiq "${prefix}reviewed by[[:space:]]+[^,[:space:]<][^,]*,[[:space:]]*[1-9][0-9]*[[:space:]]+rounds?([^[:alnum:]]|$)" <<<"$body"; then
             echo "::notice::review evidence present: $(grep -Ei "${prefix}reviewed by" <<<"$body" | head -1)"
             exit 0
           fi

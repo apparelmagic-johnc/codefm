@@ -32,6 +32,29 @@ swift test                  # unit tests (see caveat below)
   CLT-only machine it fails with `no such module 'XCTest'` — that is an
   environment gap, not a code defect. Install Xcode to run the suite.
 
+## Review loop
+
+Codex implements from a task brief; **Opus 5 (effort high) reviews** in a
+visible Orca terminal, up to **two rounds** per deliverable. There is no bot
+review layer (CodeRabbit removed 2026-08-30): the Opus pass is the only
+reviewer and covers the mechanical layer too (SwiftLint-level nits, dead code,
+missing tests). Findings are addressed on the same branch; if changes are still
+required after round 2, escalate to John — an unresolved round-2 review is not
+mergeable.
+
+The pass is skipped only when ALL hold: docs-only, test-only, or under ~40
+lines; no invariant file touched; `swift build`, `swift test`, and
+`Scripts/build-app.sh` green (plus `ci` + `gitleaks` on the PR).
+
+**Invariant files (never skip-eligible):** `Package.swift` (system frameworks
+only — no SPM deps), `Resources/streams.json` (the catalog; the website syncs
+from it), `Resources/Info.plist`, `Resources/CodeFM.entitlements`,
+`Sources/LoginItemManager.swift` (ServiceManagement / start-at-login),
+`Sources/StreamPlayer.swift` + `Sources/YouTubeStreamSource.swift` (off-screen
+WebKit player), `Scripts/build-app.sh` (ad-hoc signing).
+
+Every PR body states `Reviewed by Opus, N rounds` or `Review skipped: <rule>`.
+
 ## Orca orchestration & worktrees
 
 This repo is managed inside **Orca**. When work touches Orca-tracked state

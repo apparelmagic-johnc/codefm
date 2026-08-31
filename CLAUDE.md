@@ -55,6 +55,12 @@ WebKit player), `Scripts/build-app.sh` (ad-hoc signing).
 
 Every PR body states `Reviewed by Opus, N rounds` or `Review skipped: <rule>`.
 
+**Branch protection is strict:** `main` requires the PR branch to be up to
+date. On `mergeStateStatus: BEHIND`, run `gh pr update-branch <n>`, wait for
+the checks to go green again, then merge; if more commits are needed after
+the update, `git pull` in the worktree first — never `--admin`, never a
+force-push (decision 2026-08-30).
+
 ## Orca orchestration & worktrees
 
 This repo is managed inside **Orca**. When work touches Orca-tracked state

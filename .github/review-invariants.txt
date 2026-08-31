@@ -1,0 +1,12 @@
+# Paths that always require a review round (never skip-eligible). Bash glob; '*' spans '/'.
+# Keep in sync with CLAUDE.md "Review loop".
+Package.swift
+Resources/streams.json
+Resources/Info.plist
+Resources/CodeFM.entitlements
+Sources/LoginItemManager.swift
+Sources/StreamPlayer.swift
+Sources/YouTubeStreamSource.swift
+Scripts/build-app.sh
+.github/*
+CLAUDE.md

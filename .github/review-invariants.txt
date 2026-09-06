@@ -1,4 +1,5 @@
-# Paths that always require a review round (never skip-eligible). Bash glob; '*' spans '/'.
+# Paths ineligible for the docs/test/size review skips (the opus-implementer
+# skip in ~/.agents/MODELS.md still applies). Bash glob; '*' spans '/'.
 # Keep in sync with CLAUDE.md "Review loop".
 Package.swift
 Resources/streams.json

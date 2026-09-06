@@ -34,17 +34,10 @@ swift test                  # unit tests (see caveat below)
 
 ## Review loop
 
-Codex implements from a task brief; **Opus 5 (effort high) reviews** in a
-visible Orca terminal, up to **two rounds** per deliverable. There is no bot
-review layer (CodeRabbit removed 2026-08-30): the Opus pass is the only
-reviewer and covers the mechanical layer too (SwiftLint-level nits, dead code,
-missing tests). Findings are addressed on the same branch; if changes are still
-required after round 2, escalate to John — an unresolved round-2 review is not
-mergeable.
+**Roles, models, effort levels, and the review loop are universal:** see `~/.agents/MODELS.md` (orchestrator = Claude, implementer + spec/plan reviewer = Codex, effort defaults and the per-dispatch effort rule). This file adds only project-specific rules.
 
-The pass is skipped only when ALL hold: docs-only, test-only, or under ~40
-lines; no invariant file touched; `swift build`, `swift test`, and
-`Scripts/build-app.sh` green (plus `ci` + `gitleaks` on the PR).
+**Required checks:** `ci`, `gitleaks`, `review-evidence`. Local gates before a
+PR: `swift build`, `swift test`, and `Scripts/build-app.sh` green.
 
 **Invariant files (never skip-eligible):** `Package.swift` (system frameworks
 only — no SPM deps), `Resources/streams.json` (the catalog; the website syncs
@@ -52,8 +45,6 @@ from it), `Resources/Info.plist`, `Resources/CodeFM.entitlements`,
 `Sources/LoginItemManager.swift` (ServiceManagement / start-at-login),
 `Sources/StreamPlayer.swift` + `Sources/YouTubeStreamSource.swift` (off-screen
 WebKit player), `Scripts/build-app.sh` (ad-hoc signing).
-
-Every PR body states `Reviewed by Opus, N rounds` or `Review skipped: <rule>`.
 
 **Branch protection is strict:** `main` requires the PR branch to be up to
 date. On `mergeStateStatus: BEHIND`, run `gh pr update-branch <n>`, wait for
@@ -77,11 +68,13 @@ orca worktree current --json
 
 **Spawning agents / new work**
 
-- Separate checkout with an agent running in it:
+- Implementation task: a separate checkout with Codex in it (Claude only as
+  the approved quota fallback, see `~/.agents/MODELS.md`):
   ```bash
-  orca worktree create --name <task> --agent <claude|codex> --prompt "<brief>" --json
+  orca worktree create --name <task> --agent codex --prompt "<brief>" --json
   ```
-- Fresh agent in the *current* checkout (no new checkout):
+- Fresh agent in the *current* checkout for orchestration, review, or
+  analysis only, never implementation (no new checkout):
   ```bash
   orca terminal create --worktree active --command "<agent>" --json
   ```

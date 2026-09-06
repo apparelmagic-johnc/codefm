@@ -34,12 +34,12 @@ swift test                  # unit tests (see caveat below)
 
 ## Review loop
 
-**Roles, models, effort levels, and the review loop are universal:** see `~/.agents/MODELS.md` (orchestrator = Claude, implementer + spec/plan reviewer = Codex, effort defaults and the per-dispatch effort rule). This file adds only project-specific rules.
+**Roles, models, effort levels, and the review loop are universal:** see `~/.agents/MODELS.md` (role table with default model + effort per role, the orchestrator's per-dispatch selection rule, escalation, and the review loop). This file adds only project-specific rules.
 
 **Required checks:** `ci`, `gitleaks`, `review-evidence`. Local gates before a
 PR: `swift build`, `swift test`, and `Scripts/build-app.sh` green.
 
-**Invariant files (never skip-eligible):** `Package.swift` (system frameworks
+**Invariant files (ineligible for the docs/test/size skips; the MODELS.md opus-implementer exception still applies):** `Package.swift` (system frameworks
 only — no SPM deps), `Resources/streams.json` (the catalog; the website syncs
 from it), `Resources/Info.plist`, `Resources/CodeFM.entitlements`,
 `Sources/LoginItemManager.swift` (ServiceManagement / start-at-login),
@@ -68,10 +68,11 @@ orca worktree current --json
 
 **Spawning agents / new work**
 
-- Implementation task: a separate checkout with Codex in it (Claude only as
-  the approved quota fallback, see `~/.agents/MODELS.md`):
+- Implementation task: a separate checkout with the implementer the
+  orchestrator chose (`codex` by default, `claude` for the fallback
+  implementer; models and effort in `~/.agents/MODELS.md`):
   ```bash
-  orca worktree create --name <task> --agent codex --prompt "<brief>" --json
+  orca worktree create --name <task> --agent <codex|claude> --prompt "<brief>" --json
   ```
 - Fresh agent in the *current* checkout for orchestration, review, or
   analysis only, never implementation (no new checkout):
